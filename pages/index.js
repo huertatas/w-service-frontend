@@ -8,6 +8,7 @@ import {
   MediaQuery,
   Burger,
   useMantineTheme,
+  Table,
 } from "@mantine/core";
 import { IconDatabase, IconChevronRight, IconCircleOff } from "@tabler/icons";
 import axios from "axios";
@@ -16,14 +17,16 @@ export default function Home() {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const [active, setActive] = useState(9999);
-
+  const [databaseSelected, setDatabaseSelected] = useState([]);
+  console.log(
+    "🚀 ~ file: index.js:21 ~ Home ~ databaseSelected",
+    databaseSelected
+  );
   const [databases, setDatabases] = useState([]);
 
   const handleGetDatabases = async () => {
     try {
       const resGetDatabases = await axios.get("http://localhost:8000/");
-
-      console.log("resGetDatabases -->", resGetDatabases.data.bdd);
 
       const data = resGetDatabases.data.bdd.map((el) => {
         return {
@@ -42,7 +45,32 @@ export default function Home() {
     try {
       const resBack = await axios.get(`http://localhost:8000/${url}`);
 
-      console.log("resBack -->", resBack);
+      const elData = resBack.data;
+
+      let tablesDatabase = [];
+
+      for (const datazer in elData) {
+        let th = datazer;
+        let td = [];
+
+        for (const el in elData[datazer]) {
+          td.push(<th>{el}</th>);
+        }
+        tablesDatabase.push(
+          <Table withBorder key={th + "top"}>
+            <thead>
+              <tr key={th}>
+                <th>{th}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr key={th + "bottom"}>{td}</tr>
+            </tbody>
+          </Table>
+        );
+      }
+
+      setDatabaseSelected(tablesDatabase);
     } catch (e) {
       console.log("error ->", e.message);
     }
@@ -147,19 +175,23 @@ export default function Home() {
       >
         {/* main content */}
 
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontSize: "45px",
-            position: "relative",
-          }}
-        >
-          <div>Aucune base sélectionée</div>
-        </div>
+        {active === 9999 && (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontSize: "45px",
+              position: "relative",
+            }}
+          >
+            <div>Aucune base sélectionée</div>
+          </div>
+        )}
+
+        {active !== 999 && databaseSelected}
       </AppShell>
     </div>
   );
