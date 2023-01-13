@@ -24,7 +24,6 @@
     "@mantine/prism": "^5.10.0",
     "@mantine/spotlight": "^5.10.0",
     "@mantine/tiptap": "^5.10.0",
-    "@react-pdf/renderer": "^3.0.2",
     "@tabler/icons": "^1.119.0",
     "@tiptap/extension-link": "^2.0.0-beta.209",
     "@tiptap/react": "^2.0.0-beta.209",
@@ -36,11 +35,6 @@
     "react": "^18.1.0",
     "react-dom": "18.1.0",
     "sass": "^1.50.0"
-  },
-  "overrides": {
-    "@react-pdf/renderer": {
-      "react": "^18.0.0"
-    }
   },
   "devDependencies": {
     "eslint": "8.13.0",
