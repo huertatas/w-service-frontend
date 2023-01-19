@@ -218,6 +218,7 @@ export default function Home() {
     }
   };
 
+  // GET avec params id ou autre et rajouter champ required
   // POST CREATE DATA /create
   const handleCreateDataInTable = async () => {
     try {
