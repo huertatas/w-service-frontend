@@ -9,21 +9,78 @@ import {
   Burger,
   useMantineTheme,
   Table,
+  Code,
+  Select,
 } from "@mantine/core";
 import { IconDatabase, IconChevronRight, IconCircleOff } from "@tabler/icons";
+import { TextInput, Button, Group, Box } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { showNotification } from "@mantine/notifications";
 import axios from "axios";
+import { Switch, ActionIcon, Text } from "@mantine/core";
+import { randomId } from "@mantine/hooks";
+import { IconTrash } from "@tabler/icons";
 
 export default function Home() {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const [active, setActive] = useState(9999);
-  const [databaseSelected, setDatabaseSelected] = useState([]);
-  console.log(
-    "🚀 ~ file: index.js:21 ~ Home ~ databaseSelected",
-    databaseSelected
-  );
   const [databases, setDatabases] = useState([]);
+  const [databaseSelected, setDatabaseSelected] = useState([]);
+  const [databaseNameSelected, setDatabaseNameSelected] = useState("");
+  const [dataFromDatabase, setDataFromDatabases] = useState(false);
 
+  const formCreateDatabase = useForm({
+    initialValues: {
+      databaseName: "",
+    },
+  });
+
+  const formCreateTableau = useForm({
+    initialValues: {
+      tableauName: "",
+    },
+  });
+
+  const formElementTableau = useForm({
+    initialValues: {
+      elementTableau: [{ name: "", key: randomId(), type: "string" }],
+    },
+  });
+
+  const fieldsTableau = formElementTableau.values.elementTableau.map(
+    (item, index) => (
+      <div
+        style={{ display: "flex", flexDirection: "column", marginTop: "8px" }}
+        key={item.key}
+      >
+        <TextInput
+          placeholder="champ"
+          sx={{ flex: 1 }}
+          {...formElementTableau.getInputProps(`elementTableau.${index}.name`)}
+        />
+        <Select
+          style={{ marginTop: "8px" }}
+          placeholder="String ou number"
+          {...formElementTableau.getInputProps(`elementTableau.${index}.typef`)}
+          data={[
+            { value: "number", label: "Number" },
+            { value: "string", label: "String" },
+          ]}
+        />
+        <ActionIcon
+          color="violet"
+          onClick={() =>
+            formElementTableau.removeListItem("elementTableau", index)
+          }
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </div>
+    )
+  );
+
+  // GET DATABASES
   const handleGetDatabases = async () => {
     try {
       const resGetDatabases = await axios.get("http://localhost:8000/");
@@ -41,7 +98,9 @@ export default function Home() {
     }
   };
 
+  // GET DATABASES DETAILS
   const handleGetDataFromDatabases = async (url) => {
+    setDatabaseNameSelected(url);
     try {
       const resBack = await axios.get(`http://localhost:8000/${url}`);
 
@@ -54,17 +113,36 @@ export default function Home() {
         let td = [];
 
         for (const el in elData[datazer]) {
-          td.push(<th>{el}</th>);
+          td.push(
+            <th key={el} style={{ width: "100%", textAlign: "center" }}>
+              {el}
+            </th>
+          );
         }
         tablesDatabase.push(
-          <Table withBorder key={th + "top"}>
+          <Table
+            style={{
+              margin: "20px",
+              width: "fit-content",
+              border: "1px solid #dee2e6",
+              borderRadius: "12px",
+              cursor: "pointer",
+            }}
+            onClick={() => handleGetDatabaseFull(`${url}/${th}`)}
+            key={th + "top"}
+          >
             <thead>
               <tr key={th}>
-                <th>{th}</th>
+                <th>{th} (détail du tableau)</th>
               </tr>
             </thead>
             <tbody>
-              <tr key={th + "bottom"}>{td}</tr>
+              <tr
+                style={{ display: "flex", flexDirection: "column" }}
+                key={th + "bottom"}
+              >
+                {td}
+              </tr>
             </tbody>
           </Table>
         );
@@ -73,6 +151,78 @@ export default function Home() {
       setDatabaseSelected(tablesDatabase);
     } catch (e) {
       console.log("error ->", e.message);
+    }
+  };
+
+  // GET DATABASES DATA
+  const handleGetDatabaseFull = async (url) => {
+    try {
+      const res = await axios.get(`http://localhost:8000/${url}`);
+
+      if (res.data) {
+        setDataFromDatabases(res.data);
+      }
+    } catch (e) {
+      console.log("error ->", e.message);
+    }
+  };
+
+  // POST CREATE DATABASE
+  const handleCreateDatabase = async (value) => {
+    try {
+      const res = await axios.post(`http://localhost:8000/${value}`);
+      console.log("🚀 ~ file: index.js:116 ~ handleCreateDatabase ~ res", res);
+      if (res.data === '{message : "This name is already used by a bdd !"}') {
+        showNotification({ message: "ce nom est déjà pris", color: "red" });
+        return;
+      }
+      showNotification({
+        message: "Création de la base de donnée réussis",
+        color: "violet",
+      });
+      await handleGetDatabases();
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  // POST CREATE TABLEAU
+  const handleCreateTable = async () => {
+    try {
+      let dataTableauToSend = {};
+
+      formElementTableau.values.elementTableau.map((el) => {
+        dataTableauToSend[el.name] = { type: el.type, required: true };
+      });
+
+      const res = await axios.post(
+        `http://localhost:8000/${databaseNameSelected}/${formCreateTableau.values.tableauName}`,
+        dataTableauToSend
+      );
+      console.log("🚀 ~ file: index.js:202 ~ handleCreateTable ~ res", res);
+
+      if (
+        res.data ===
+        `{message : "Table ${formCreateTableau.values.tableauName} already exist in the database test !"}`
+      ) {
+        showNotification({ message: "ce nom est déjà pris", color: "red" });
+        return;
+      }
+      showNotification({
+        message: "Création de la table réussis",
+        color: "violet",
+      });
+      await handleGetDataFromDatabases(databaseNameSelected);
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  // POST CREATE DATA /create
+  const handleCreateDataInTable = async () => {
+    try {
+    } catch (e) {
+      console.log(e.message);
     }
   };
 
@@ -108,6 +258,15 @@ export default function Home() {
   useEffect(() => {
     handleGetDatabases();
   }, []);
+
+  useEffect(() => {
+    setDatabaseSelected([]);
+    setDataFromDatabases(false);
+  }, [databases]);
+
+  useEffect(() => {
+    setDataFromDatabases(false);
+  }, [databaseSelected]);
 
   return (
     <div>
@@ -150,6 +309,29 @@ export default function Home() {
               Liste des bases de données :
             </div>
             {items}
+            <Box
+              sx={{ maxWidth: 300 }}
+              style={{ marginTop: "25px", margin: "10px" }}
+              mx="auto"
+            >
+              <form
+                onSubmit={formCreateDatabase.onSubmit((values) => {
+                  console.log(values);
+                  handleCreateDatabase(values.databaseName);
+                })}
+              >
+                <TextInput
+                  label="Ajouter une nouvelle base de donnée"
+                  placeholder="Nom"
+                  {...formCreateDatabase.getInputProps("databaseName")}
+                />
+                <Group position="right" mt="md">
+                  <Button color="violet" type="submit">
+                    Créer
+                  </Button>
+                </Group>
+              </form>
+            </Box>
           </Navbar>
         }
         header={
@@ -181,6 +363,7 @@ export default function Home() {
               width: "100%",
               height: "100%",
               display: "flex",
+              flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
               fontSize: "45px",
@@ -191,7 +374,76 @@ export default function Home() {
           </div>
         )}
 
-        {active !== 999 && databaseSelected}
+        {active !== 999 && (
+          <>
+            <Box
+              sx={{ maxWidth: 300 }}
+              style={{ margin: "auto", marginBottom: "40px" }}
+              mx="auto"
+            >
+              <form
+                onSubmit={formCreateTableau.onSubmit((values) => {
+                  console.log(values);
+                  handleCreateTable(values.tableauName);
+                })}
+              >
+                <TextInput
+                  label="Ajouter un nouveau tableau"
+                  placeholder="Nom"
+                  {...formCreateTableau.getInputProps("tableauName")}
+                />
+              </form>
+              {fieldsTableau}
+              <Group position="center" mt="md">
+                <Button
+                  onClick={() =>
+                    formElementTableau.insertListItem("elementTableau", {
+                      name: "",
+                      key: randomId(),
+                      type: "string",
+                    })
+                  }
+                  color="violet"
+                >
+                  ajouter un champ
+                </Button>
+              </Group>
+              <Group position="center" style={{ marginBottom: "8px" }} mt="md">
+                <Button color="violet" onClick={handleCreateTable}>
+                  Créer
+                </Button>
+              </Group>
+            </Box>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {databaseSelected.length > 0 ? (
+                databaseSelected
+              ) : (
+                <div>Aucune table</div>
+              )}
+            </div>
+            {dataFromDatabase && (
+              <div
+                style={{
+                  margin: "15px",
+                  width: "fit-content",
+                  margin: "auto",
+                  borderRadius: "25px",
+                }}
+              >
+                <Code style={{ background: "white" }} block mt={5}>
+                  {JSON.stringify(dataFromDatabase, null, 2)}
+                </Code>
+              </div>
+            )}
+          </>
+        )}
       </AppShell>
     </div>
   );
