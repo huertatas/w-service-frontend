@@ -663,6 +663,26 @@ export default function Home() {
                   </Group>
                 )}
                 {fieldsCreate.length > 0 && (
+                  <Group position="center" mt="md">
+                    <Button
+                      onClick={() => {
+                        for (
+                          let i = -1;
+                          i < dataInfoForInsertion.length + 5;
+                          i++
+                        ) {
+                          formCreateByField.removeListItem("fieldSearchArr", i);
+                        }
+                        formCreateByField.removeListItem("fieldSearchArr", 0);
+                      }}
+                      color="violet"
+                      variant="subtle"
+                    >
+                      - réinitialiser
+                    </Button>
+                  </Group>
+                )}
+                {fieldsCreate.length > 0 && (
                   <Group
                     position="center"
                     style={{ marginBottom: "8px" }}
@@ -759,7 +779,7 @@ export default function Home() {
                         color="violet"
                         variant="subtle"
                       >
-                        - supprimer recherche
+                        - réinitialiser
                       </Button>
                     </Group>
                   )}
