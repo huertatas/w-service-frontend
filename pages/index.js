@@ -11,13 +11,15 @@ import {
   Table,
   Code,
   Select,
+  Checkbox,
+  Divider,
 } from "@mantine/core";
 import { IconDatabase, IconChevronRight, IconCircleOff } from "@tabler/icons";
 import { TextInput, Button, Group, Box } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import axios from "axios";
-import { Switch, ActionIcon, Text } from "@mantine/core";
+import { ActionIcon } from "@mantine/core";
 import { randomId } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons";
 
@@ -28,6 +30,9 @@ export default function Home() {
   const [databases, setDatabases] = useState([]);
   const [databaseSelected, setDatabaseSelected] = useState([]);
   const [databaseNameSelected, setDatabaseNameSelected] = useState("");
+  const [tableauSelected, setTableauSelected] = useState("");
+  const [dataGotById, setDataGotById] = useState("");
+  const [dataGotByField, setDataGotByField] = useState("");
   const [dataFromDatabase, setDataFromDatabases] = useState(false);
 
   const formCreateDatabase = useForm({
@@ -42,9 +47,23 @@ export default function Home() {
     },
   });
 
+  const formGetById = useForm({
+    initialValues: {
+      idData: "",
+    },
+  });
+
+  const formGetByField = useForm({
+    initialValues: {
+      fieldSearchArr: [{ valueToSearch: "", key: randomId(), field: "" }],
+    },
+  });
+
   const formElementTableau = useForm({
     initialValues: {
-      elementTableau: [{ name: "", key: randomId(), type: "string" }],
+      elementTableau: [
+        { name: "", key: randomId(), type: "string", required: true },
+      ],
     },
   });
 
@@ -62,17 +81,57 @@ export default function Home() {
         <Select
           style={{ marginTop: "8px" }}
           placeholder="String ou number"
-          {...formElementTableau.getInputProps(`elementTableau.${index}.typef`)}
+          {...formElementTableau.getInputProps(`elementTableau.${index}.type`)}
           data={[
             { value: "number", label: "Number" },
             { value: "string", label: "String" },
           ]}
+        />
+        <Checkbox
+          style={{ textAlign: "center" }}
+          label="Required"
+          color="violet"
+          mt="sm"
+          {...formElementTableau.getInputProps(
+            `elementTableau.${index}.required`,
+            {
+              type: "checkbox",
+            }
+          )}
         />
         <ActionIcon
           color="violet"
           onClick={() =>
             formElementTableau.removeListItem("elementTableau", index)
           }
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </div>
+    )
+  );
+
+  const fieldsSearch = formGetByField.values.fieldSearchArr.map(
+    (item, index) => (
+      <div
+        style={{ display: "flex", flexDirection: "column", marginTop: "8px" }}
+        key={item.key}
+      >
+        <TextInput
+          placeholder="champ"
+          sx={{ flex: 1 }}
+          {...formGetByField.getInputProps(`fieldSearchArr.${index}.field`)}
+        />
+        <TextInput
+          placeholder="value"
+          sx={{ flex: 1 }}
+          {...formGetByField.getInputProps(
+            `fieldSearchArr.${index}.valueToSearch`
+          )}
+        />
+        <ActionIcon
+          color="violet"
+          onClick={() => formGetByField.removeListItem("fieldSearchArr", index)}
         >
           <IconTrash size={16} />
         </ActionIcon>
@@ -128,7 +187,10 @@ export default function Home() {
               borderRadius: "12px",
               cursor: "pointer",
             }}
-            onClick={() => handleGetDatabaseFull(`${url}/${th}`)}
+            onClick={() => {
+              handleGetDatabaseFull(`${url}/${th}`);
+              setTableauSelected(th);
+            }}
             key={th + "top"}
           >
             <thead>
@@ -192,7 +254,7 @@ export default function Home() {
       let dataTableauToSend = {};
 
       formElementTableau.values.elementTableau.map((el) => {
-        dataTableauToSend[el.name] = { type: el.type, required: true };
+        dataTableauToSend[el.name] = { type: el.type, required: el.required };
       });
 
       const res = await axios.post(
@@ -218,7 +280,45 @@ export default function Home() {
     }
   };
 
-  // GET avec params id ou autre et rajouter champ required
+  // GET DATA BY ID
+  const handleGetDataByIdOrById = async (value) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}?id=${value}`
+      );
+      console.log(
+        "🚀 ~ file: index.js:253 ~ handleGetDataByIdOrById ~ res",
+        res
+      );
+
+      setDataGotById(res.data);
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  // GET DATA BY FIELD
+  const handleGetDataByIdOrByField = async (value) => {
+    let stringSearch = "";
+
+    value.fieldSearchArr.map((el) => {
+      if (!stringSearch) {
+        stringSearch = `?${el.field}=${el.valueToSearch}`;
+      } else {
+        stringSearch = `${stringSearch}&${el.field}=${el.valueToSearch}`;
+      }
+    });
+
+    const res = await axios.get(
+      `http://localhost:8000/${databaseNameSelected}/${tableauSelected}${stringSearch}`
+    );
+    setDataGotByField(res.data);
+    try {
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
   // POST CREATE DATA /create
   const handleCreateDataInTable = async () => {
     try {
@@ -263,10 +363,12 @@ export default function Home() {
   useEffect(() => {
     setDatabaseSelected([]);
     setDataFromDatabases(false);
+    setTableauSelected("");
   }, [databases]);
 
   useEffect(() => {
     setDataFromDatabases(false);
+    setTableauSelected("");
   }, [databaseSelected]);
 
   return (
@@ -375,7 +477,7 @@ export default function Home() {
           </div>
         )}
 
-        {active !== 999 && (
+        {active !== 9999 && (
           <>
             <Box
               sx={{ maxWidth: 300 }}
@@ -402,11 +504,13 @@ export default function Home() {
                       name: "",
                       key: randomId(),
                       type: "string",
+                      required: true,
                     })
                   }
                   color="violet"
+                  variant="subtle"
                 >
-                  ajouter un champ
+                  + ajouter un champ
                 </Button>
               </Group>
               <Group position="center" style={{ marginBottom: "8px" }} mt="md">
@@ -441,6 +545,87 @@ export default function Home() {
                 <Code style={{ background: "white" }} block mt={5}>
                   {JSON.stringify(dataFromDatabase, null, 2)}
                 </Code>
+                <form
+                  onSubmit={formGetById.onSubmit((values) => {
+                    handleGetDataByIdOrById(values.idData);
+                  })}
+                  style={{ marginTop: "15px" }}
+                >
+                  <Divider color="violet" my="sm"></Divider>
+                  <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
+                    Recherche par ID
+                  </div>
+                  <TextInput
+                    placeholder="ID"
+                    {...formGetById.getInputProps("idData")}
+                  />
+                </form>
+
+                <Code
+                  style={{
+                    background: "white",
+                    borderRadius: "12px",
+                    border: "2px solid black",
+                  }}
+                  block
+                  mt={5}
+                >
+                  {JSON.stringify(dataGotById || [], null, 2)}
+                </Code>
+
+                <Box
+                  sx={{ maxWidth: 300 }}
+                  style={{
+                    margin: "auto",
+                    marginBottom: "40px",
+                    marginTop: "15px",
+                  }}
+                  mx="auto"
+                >
+                  <Divider color="violet" my="sm"></Divider>
+                  <div style={{ fontWeight: "bold" }}>Recherche par champs</div>
+                  {fieldsSearch}
+                  <Group position="center" mt="md">
+                    <Button
+                      onClick={() =>
+                        formGetByField.insertListItem("fieldSearchArr", {
+                          valueToSearch: "",
+                          key: randomId(),
+                          field: "",
+                        })
+                      }
+                      color="violet"
+                      variant="subtle"
+                    >
+                      + ajouter un champ de recherche
+                    </Button>
+                  </Group>
+                  <Group
+                    position="center"
+                    style={{ marginBottom: "8px" }}
+                    mt="md"
+                  >
+                    <Button
+                      color="violet"
+                      onClick={() =>
+                        handleGetDataByIdOrByField(formGetByField.values)
+                      }
+                    >
+                      Chercher
+                    </Button>
+                  </Group>
+                  <Code
+                    style={{
+                      background: "white",
+                      borderRadius: "12px",
+                      border: "2px solid black",
+                    }}
+                    block
+                    mt={5}
+                  >
+                    {JSON.stringify(dataGotByField || [], null, 2)}
+                  </Code>
+                </Box>
               </div>
             )}
           </>
