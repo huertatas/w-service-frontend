@@ -35,6 +35,10 @@ export default function Home() {
   const [dataGotByField, setDataGotByField] = useState("");
   const [dataFromDatabase, setDataFromDatabases] = useState(false);
 
+  const [dataInfoForInsertion, setDataInfoForInsertion] = useState([]);
+
+  // FAIRE DELETE ET PUT !!!!
+
   const formCreateDatabase = useForm({
     initialValues: {
       databaseName: "",
@@ -55,15 +59,19 @@ export default function Home() {
 
   const formGetByField = useForm({
     initialValues: {
-      fieldSearchArr: [{ valueToSearch: "", key: randomId(), field: "" }],
+      fieldSearchArr: [],
+    },
+  });
+
+  const formCreateByField = useForm({
+    initialValues: {
+      fieldSearchArr: [],
     },
   });
 
   const formElementTableau = useForm({
     initialValues: {
-      elementTableau: [
-        { name: "", key: randomId(), type: "string", required: true },
-      ],
+      elementTableau: [],
     },
   });
 
@@ -112,29 +120,71 @@ export default function Home() {
   );
 
   const fieldsSearch = formGetByField.values.fieldSearchArr.map(
+    (item, index) => {
+      return (
+        <div
+          style={{ display: "flex", flexDirection: "column", marginTop: "8px" }}
+          key={item.key}
+        >
+          <TextInput
+            style={{ marginTop: "8px" }}
+            disabled
+            placeholder="champ"
+            sx={{ flex: 1 }}
+            {...formGetByField.getInputProps(`fieldSearchArr.${index}.field`)}
+          />
+          <TextInput
+            style={{ marginTop: "8px" }}
+            placeholder="value"
+            sx={{ flex: 1 }}
+            {...formGetByField.getInputProps(
+              `fieldSearchArr.${index}.valueToSearch`
+            )}
+          />
+          <ActionIcon
+            color="violet"
+            onClick={() =>
+              formGetByField.removeListItem("fieldSearchArr", index)
+            }
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </div>
+      );
+    }
+  );
+
+  const fieldsCreate = formCreateByField.values.fieldSearchArr.map(
     (item, index) => (
       <div
         style={{ display: "flex", flexDirection: "column", marginTop: "8px" }}
         key={item.key}
       >
         <TextInput
+          style={{ marginTop: "8px" }}
+          disabled
           placeholder="champ"
           sx={{ flex: 1 }}
-          {...formGetByField.getInputProps(`fieldSearchArr.${index}.field`)}
+          {...formCreateByField.getInputProps(`fieldSearchArr.${index}.field`)}
         />
         <TextInput
+          style={{ marginTop: "8px" }}
           placeholder="value"
           sx={{ flex: 1 }}
-          {...formGetByField.getInputProps(
+          {...formCreateByField.getInputProps(
             `fieldSearchArr.${index}.valueToSearch`
           )}
         />
-        <ActionIcon
-          color="violet"
-          onClick={() => formGetByField.removeListItem("fieldSearchArr", index)}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        {!item.required && (
+          <ActionIcon
+            color="violet"
+            onClick={() =>
+              formCreateByField.removeListItem("fieldSearchArr", index)
+            }
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        )}
       </div>
     )
   );
@@ -166,12 +216,15 @@ export default function Home() {
       const elData = resBack.data;
 
       let tablesDatabase = [];
+      let infoData = [];
 
       for (const datazer in elData) {
         let th = datazer;
         let td = [];
 
         for (const el in elData[datazer]) {
+          infoData.push({ ...elData[datazer][el], nameField: el });
+
           td.push(
             <th key={el} style={{ width: "100%", textAlign: "center" }}>
               {el}
@@ -209,6 +262,8 @@ export default function Home() {
           </Table>
         );
       }
+
+      setDataInfoForInsertion(infoData);
 
       setDatabaseSelected(tablesDatabase);
     } catch (e) {
@@ -309,8 +364,17 @@ export default function Home() {
       }
     });
 
+    console.log(
+      "🚀 ~ file: index.js:359 ~ value.fieldSearchArr.map ~ stringSearch",
+      stringSearch
+    );
+
     const res = await axios.get(
       `http://localhost:8000/${databaseNameSelected}/${tableauSelected}${stringSearch}`
+    );
+    console.log(
+      "🚀 ~ file: index.js:364 ~ handleGetDataByIdOrByField ~ res",
+      res
     );
     setDataGotByField(res.data);
     try {
@@ -319,9 +383,34 @@ export default function Home() {
     }
   };
 
-  // POST CREATE DATA /create
-  const handleCreateDataInTable = async () => {
+  // POST CREATE DATA
+  const handleCreateDataInTable = async (value) => {
     try {
+      const insertionValue = value.fieldSearchArr;
+
+      let dataTableauToSend = {};
+
+      insertionValue.map((el) => {
+        if (el.type === "number") {
+          dataTableauToSend[el.field] = +el.valueToSearch;
+        } else {
+          dataTableauToSend[el.field] = el.valueToSearch;
+        }
+      });
+
+      const res = await axios.post(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}/create`,
+        dataTableauToSend
+      );
+      console.log("🚀 ~ file: index.js:202 ~ handleCreateTable ~ res", res);
+
+      const resData = await axios.get(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}`
+      );
+
+      if (resData.data) {
+        setDataFromDatabases(res.data);
+      }
     } catch (e) {
       console.log(e.message);
     }
@@ -362,13 +451,18 @@ export default function Home() {
 
   useEffect(() => {
     setDatabaseSelected([]);
+    setDatabaseNameSelected("");
     setDataFromDatabases(false);
     setTableauSelected("");
+    setDataGotById("");
+    setDataGotByField("");
   }, [databases]);
 
   useEffect(() => {
     setDataFromDatabases(false);
     setTableauSelected("");
+    setDataGotById("");
+    setDataGotByField("");
   }, [databaseSelected]);
 
   return (
@@ -542,6 +636,48 @@ export default function Home() {
                   borderRadius: "25px",
                 }}
               >
+                <div style={{ fontWeight: "bold" }}>Insérer des données</div>
+                {fieldsCreate}
+                {fieldsCreate.length === 0 && (
+                  <Group position="center" mt="md">
+                    <Button
+                      onClick={() => {
+                        dataInfoForInsertion.map((el) => {
+                          if (el.nameField === "id") {
+                            return;
+                          }
+                          formCreateByField.insertListItem("fieldSearchArr", {
+                            valueToSearch: "",
+                            key: randomId(),
+                            field: el.nameField,
+                            type: el.type,
+                            required: el.required,
+                          });
+                        });
+                      }}
+                      color="violet"
+                      variant="subtle"
+                    >
+                      + ajouter des champ
+                    </Button>
+                  </Group>
+                )}
+                {fieldsCreate.length > 0 && (
+                  <Group
+                    position="center"
+                    style={{ marginBottom: "8px" }}
+                    mt="md"
+                  >
+                    <Button
+                      color="violet"
+                      onClick={() =>
+                        handleCreateDataInTable(formCreateByField.values)
+                      }
+                    >
+                      Créer
+                    </Button>
+                  </Group>
+                )}
                 <Code style={{ background: "white" }} block mt={5}>
                   {JSON.stringify(dataFromDatabase, null, 2)}
                 </Code>
@@ -585,21 +721,48 @@ export default function Home() {
                   <Divider color="violet" my="sm"></Divider>
                   <div style={{ fontWeight: "bold" }}>Recherche par champs</div>
                   {fieldsSearch}
-                  <Group position="center" mt="md">
-                    <Button
-                      onClick={() =>
-                        formGetByField.insertListItem("fieldSearchArr", {
-                          valueToSearch: "",
-                          key: randomId(),
-                          field: "",
-                        })
-                      }
-                      color="violet"
-                      variant="subtle"
-                    >
-                      + ajouter un champ de recherche
-                    </Button>
-                  </Group>
+                  {fieldsSearch.length === 0 && (
+                    <Group position="center" mt="md">
+                      <Button
+                        onClick={() => {
+                          dataInfoForInsertion.map((el) => {
+                            if (el.nameField === "id") {
+                              return;
+                            }
+                            formGetByField.insertListItem("fieldSearchArr", {
+                              valueToSearch: "",
+                              key: randomId(),
+                              field: el.nameField,
+                            });
+                          });
+                        }}
+                        color="violet"
+                        variant="subtle"
+                      >
+                        + ajouter les champs de recherche
+                      </Button>
+                    </Group>
+                  )}
+                  {fieldsSearch.length > 0 && (
+                    <Group position="center" mt="md">
+                      <Button
+                        onClick={() => {
+                          for (
+                            let i = -1;
+                            i < dataInfoForInsertion.length + 5;
+                            i++
+                          ) {
+                            formGetByField.removeListItem("fieldSearchArr", i);
+                          }
+                          formGetByField.removeListItem("fieldSearchArr", 0);
+                        }}
+                        color="violet"
+                        variant="subtle"
+                      >
+                        - supprimer recherche
+                      </Button>
+                    </Group>
+                  )}
                   <Group
                     position="center"
                     style={{ marginBottom: "8px" }}
