@@ -235,7 +235,7 @@ export default function Home() {
           <Table
             style={{
               margin: "20px",
-              width: "fit-content",
+              width: "600px",
               border: "1px solid #dee2e6",
               borderRadius: "12px",
               cursor: "pointer",
@@ -507,7 +507,7 @@ export default function Home() {
             </div>
             {items}
             <Box
-              sx={{ maxWidth: 300 }}
+              sx={{ maxWidth: 700 }}
               style={{ marginTop: "25px", margin: "10px" }}
               mx="auto"
             >
@@ -574,7 +574,7 @@ export default function Home() {
         {active !== 9999 && (
           <>
             <Box
-              sx={{ maxWidth: 300 }}
+              sx={{ maxWidth: 700 }}
               style={{ margin: "auto", marginBottom: "40px" }}
               mx="auto"
             >
@@ -631,7 +631,7 @@ export default function Home() {
               <div
                 style={{
                   margin: "15px",
-                  width: "fit-content",
+                  width: "600px",
                   margin: "auto",
                   borderRadius: "25px",
                 }}
@@ -730,7 +730,7 @@ export default function Home() {
                 </Code>
 
                 <Box
-                  sx={{ maxWidth: 300 }}
+                  sx={{ maxWidth: 700 }}
                   style={{
                     margin: "auto",
                     marginBottom: "40px",
