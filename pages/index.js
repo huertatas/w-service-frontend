@@ -414,6 +414,7 @@ export default function Home() {
       }
     } catch (e) {
       console.log("error ->", e.message);
+      showNotification({ message: "Mauvais type de donnée", color: "red" });
     }
   };
 
