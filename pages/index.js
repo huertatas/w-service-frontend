@@ -216,14 +216,14 @@ export default function Home() {
       const elData = resBack.data;
 
       let tablesDatabase = [];
-      let infoData = [];
+      // let infoData = [];
 
       for (const datazer in elData) {
         let th = datazer;
         let td = [];
 
         for (const el in elData[datazer]) {
-          infoData.push({ ...elData[datazer][el], nameField: el });
+          // infoData.push({ ...elData[datazer][el], nameField: el });
 
           td.push(
             <th key={el} style={{ width: "100%", textAlign: "center" }}>
@@ -242,6 +242,21 @@ export default function Home() {
             }}
             onClick={() => {
               handleGetDatabaseFull(`${url}/${th}`);
+
+              let infoData = [];
+
+              for (const el in elData[datazer]) {
+                infoData.push({ ...elData[datazer][el], nameField: el });
+
+                td.push(
+                  <th key={el} style={{ width: "100%", textAlign: "center" }}>
+                    {el}
+                  </th>
+                );
+              }
+
+              setDataInfoForInsertion(infoData);
+
               setTableauSelected(th);
             }}
             key={th + "top"}
@@ -263,7 +278,7 @@ export default function Home() {
         );
       }
 
-      setDataInfoForInsertion(infoData);
+      // setDataInfoForInsertion(infoData);
 
       setDatabaseSelected(tablesDatabase);
     } catch (e) {
@@ -288,7 +303,7 @@ export default function Home() {
   const handleCreateDatabase = async (value) => {
     try {
       const res = await axios.post(`http://localhost:8000/${value}`);
-      console.log("🚀 ~ file: index.js:116 ~ handleCreateDatabase ~ res", res);
+
       if (res.data === '{message : "This name is already used by a bdd !"}') {
         showNotification({ message: "ce nom est déjà pris", color: "red" });
         return;
@@ -299,7 +314,7 @@ export default function Home() {
       });
       await handleGetDatabases();
     } catch (e) {
-      console.log(e.message);
+      console.log("error ->", e.message);
     }
   };
 
@@ -316,7 +331,6 @@ export default function Home() {
         `http://localhost:8000/${databaseNameSelected}/${formCreateTableau.values.tableauName}`,
         dataTableauToSend
       );
-      console.log("🚀 ~ file: index.js:202 ~ handleCreateTable ~ res", res);
 
       if (
         res.data ===
@@ -331,7 +345,7 @@ export default function Home() {
       });
       await handleGetDataFromDatabases(databaseNameSelected);
     } catch (e) {
-      console.log(e.message);
+      console.log("error ->", e.message);
     }
   };
 
@@ -341,14 +355,10 @@ export default function Home() {
       const res = await axios.get(
         `http://localhost:8000/${databaseNameSelected}/${tableauSelected}?id=${value}`
       );
-      console.log(
-        "🚀 ~ file: index.js:253 ~ handleGetDataByIdOrById ~ res",
-        res
-      );
 
       setDataGotById(res.data);
     } catch (e) {
-      console.log(e.message);
+      console.log("error ->", e.message);
     }
   };
 
@@ -364,22 +374,14 @@ export default function Home() {
       }
     });
 
-    console.log(
-      "🚀 ~ file: index.js:359 ~ value.fieldSearchArr.map ~ stringSearch",
-      stringSearch
-    );
-
     const res = await axios.get(
       `http://localhost:8000/${databaseNameSelected}/${tableauSelected}${stringSearch}`
     );
-    console.log(
-      "🚀 ~ file: index.js:364 ~ handleGetDataByIdOrByField ~ res",
-      res
-    );
+
     setDataGotByField(res.data);
     try {
     } catch (e) {
-      console.log(e.message);
+      console.log("error ->", e.message);
     }
   };
 
@@ -402,17 +404,16 @@ export default function Home() {
         `http://localhost:8000/${databaseNameSelected}/${tableauSelected}/create`,
         dataTableauToSend
       );
-      console.log("🚀 ~ file: index.js:202 ~ handleCreateTable ~ res", res);
 
       const resData = await axios.get(
         `http://localhost:8000/${databaseNameSelected}/${tableauSelected}`
       );
 
       if (resData.data) {
-        setDataFromDatabases(res.data);
+        setDataFromDatabases(resData.data);
       }
     } catch (e) {
-      console.log(e.message);
+      console.log("error ->", e.message);
     }
   };
 
@@ -513,7 +514,6 @@ export default function Home() {
             >
               <form
                 onSubmit={formCreateDatabase.onSubmit((values) => {
-                  console.log(values);
                   handleCreateDatabase(values.databaseName);
                 })}
               >
@@ -580,7 +580,6 @@ export default function Home() {
             >
               <form
                 onSubmit={formCreateTableau.onSubmit((values) => {
-                  console.log(values);
                   handleCreateTable(values.tableauName);
                 })}
               >
@@ -617,6 +616,7 @@ export default function Home() {
               style={{
                 width: "100%",
                 display: "flex",
+                flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -690,9 +690,9 @@ export default function Home() {
                   >
                     <Button
                       color="violet"
-                      onClick={() =>
-                        handleCreateDataInTable(formCreateByField.values)
-                      }
+                      onClick={() => {
+                        handleCreateDataInTable(formCreateByField.values);
+                      }}
                     >
                       Créer
                     </Button>
