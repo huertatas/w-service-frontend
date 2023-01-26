@@ -57,6 +57,12 @@ export default function Home() {
     },
   });
 
+  const formDeleteTableau = useForm({
+    initialValues: {
+      tableauName: "",
+    },
+  });
+
   const formGetById = useForm({
     initialValues: {
       idData: "",
@@ -284,8 +290,6 @@ export default function Home() {
         );
       }
 
-      // setDataInfoForInsertion(infoData);
-
       setDatabaseSelected(tablesDatabase);
     } catch (e) {
       console.log("error ->", e.message);
@@ -347,6 +351,25 @@ export default function Home() {
       }
       showNotification({
         message: "Création de la table réussis",
+        color: "violet",
+      });
+      await handleGetDataFromDatabases(databaseNameSelected);
+    } catch (e) {
+      console.log("error ->", e.message);
+    }
+  };
+
+  // POST DELETE TABLEAU
+  const handleDeleteTable = async () => {
+    try {
+      console.log("delete function");
+      const res = await axios.delete(
+        `http://localhost:8000/${databaseNameSelected}/${formCreateTableau.values.tableauName}`
+      );
+      console.log("🚀 ~ file: index.js:370 ~ handleDeleteTable ~ res", res);
+
+      showNotification({
+        message: "Suppression de la table réussis",
         color: "violet",
       });
       await handleGetDataFromDatabases(databaseNameSelected);
@@ -622,6 +645,27 @@ export default function Home() {
               style={{ margin: "auto", marginBottom: "40px" }}
               mx="auto"
             >
+              <form
+                onSubmit={formDeleteTableau.onSubmit((values) => {
+                  handleDeleteTable(values.tableauName);
+                })}
+              >
+                <TextInput
+                  label="Supprimer un tableau"
+                  placeholder="Nom"
+                  {...formDeleteTableau.getInputProps("tableauName")}
+                />
+                <Group
+                  position="center"
+                  style={{ marginBottom: "8px" }}
+                  mt="md"
+                >
+                  <Button color="violet" type="submit">
+                    Supprimer
+                  </Button>
+                </Group>
+              </form>
+
               <form
                 onSubmit={formCreateTableau.onSubmit((values) => {
                   handleCreateTable(values.tableauName);
