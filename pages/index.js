@@ -374,6 +374,10 @@ export default function Home() {
     try {
       let dataTableauToSend = {};
 
+      if (!formCreateTableau.values.tableauName) {
+        return;
+      }
+
       formElementTableau.values.elementTableau.map((el) => {
         dataTableauToSend[el.name] = { type: el.type, required: el.required };
       });
@@ -382,10 +386,11 @@ export default function Home() {
         `http://localhost:8000/${databaseNameSelected}/${formCreateTableau.values.tableauName}`,
         dataTableauToSend
       );
+      console.log("🚀 ~ file: index.js:385 ~ handleCreateTable ~ res", res);
 
       if (
         res.data ===
-        `{message : "Table ${formCreateTableau.values.tableauName} already exist in the database test !"}`
+        `{message : "Table ${formCreateTableau.values.tableauName} already exist in the database foot !"}`
       ) {
         showNotification({ message: "ce nom est déjà pris", color: "red" });
         return;
@@ -401,14 +406,19 @@ export default function Home() {
     }
   };
 
-  // POST DELETE TABLEAU
-  const handleDeleteTable = async () => {
+  // DELETE TABLEAU
+  const handleDeleteTable = async (value) => {
+    if (!databaseNameSelected || !value) {
+      return;
+    }
+
+    console.log(databaseNameSelected, " ++ ", value);
+
     try {
-      console.log("delete function");
       const res = await axios.delete(
-        `http://localhost:8000/${databaseNameSelected}/${formCreateTableau.values.tableauName}`
+        `http://localhost:8000/${databaseNameSelected}/${value}`
       );
-      console.log("🚀 ~ file: index.js:370 ~ handleDeleteTable ~ res", res);
+      console.log("🚀 ~ file: index.js:415 ~ handleDeleteTable ~ res", res);
 
       showNotification({
         message: "Suppression de la table réussis",
@@ -556,6 +566,10 @@ export default function Home() {
 
   // DELETE DB
   const handleDeleteDatabase = async (value) => {
+    if (!value) {
+      return;
+    }
+
     try {
       await axios.delete(`http://localhost:8000/${value}`);
 
