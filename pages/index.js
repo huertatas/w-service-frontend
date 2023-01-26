@@ -87,6 +87,12 @@ export default function Home() {
     },
   });
 
+  const formUpdateByField = useForm({
+    initialValues: {
+      fieldSearchArr: [],
+    },
+  });
+
   const formElementTableau = useForm({
     initialValues: {
       elementTableau: [],
@@ -203,6 +209,31 @@ export default function Home() {
             <IconTrash size={16} />
           </ActionIcon>
         )}
+      </div>
+    )
+  );
+
+  const fieldsUpdate = formUpdateByField.values.fieldSearchArr.map(
+    (item, index) => (
+      <div
+        style={{ display: "flex", flexDirection: "column", marginTop: "8px" }}
+        key={item.key}
+      >
+        <TextInput
+          style={{ marginTop: "8px" }}
+          disabled
+          placeholder="champ"
+          sx={{ flex: 1 }}
+          {...formUpdateByField.getInputProps(`fieldSearchArr.${index}.field`)}
+        />
+        <TextInput
+          style={{ marginTop: "8px" }}
+          placeholder="value"
+          sx={{ flex: 1 }}
+          {...formUpdateByField.getInputProps(
+            `fieldSearchArr.${index}.valueToSearch`
+          )}
+        />
       </div>
     )
   );
@@ -470,6 +501,49 @@ export default function Home() {
       const resData = await axios.get(
         `http://localhost:8000/${databaseNameSelected}/${tableauSelected}`
       );
+
+      if (resData.data) {
+        setDataFromDatabases(resData.data);
+      }
+    } catch (e) {
+      console.log("error ->", e.message);
+      showNotification({ message: e.response.data, color: "red" });
+    }
+  };
+
+  // PUT DATA
+  const handleUpdateDataInTable = async (value) => {
+    try {
+      const insertionValue = value.fieldSearchArr;
+
+      let dataTableauToSend = {};
+      let id;
+
+      insertionValue.map((el) => {
+        if (el.field === "id") {
+          id = el.valueToSearch;
+        }
+
+        if (el.type === "number") {
+          dataTableauToSend[el.field] = +el.valueToSearch;
+        } else {
+          dataTableauToSend[el.field] = el.valueToSearch;
+        }
+      });
+
+      await axios.put(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}?id=${id}`,
+        dataTableauToSend
+      );
+
+      const resData = await axios.get(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}`
+      );
+
+      showNotification({
+        message: "Data mis à jours",
+        color: "violet",
+      });
 
       if (resData.data) {
         setDataFromDatabases(resData.data);
@@ -824,6 +898,68 @@ export default function Home() {
                     </Button>
                   </Group>
                 )}
+
+                <Divider color="violet" my="sm"></Divider>
+                <div style={{ fontWeight: "bold" }}>Update les données</div>
+                {fieldsUpdate}
+                {fieldsUpdate.length === 0 && (
+                  <Group position="center" mt="md">
+                    <Button
+                      onClick={() => {
+                        dataInfoForInsertion.map((el) => {
+                          formUpdateByField.insertListItem("fieldSearchArr", {
+                            valueToSearch: "",
+                            key: randomId(),
+                            field: el.nameField,
+                            type: el.type,
+                            required: el.required,
+                          });
+                        });
+                      }}
+                      color="violet"
+                      variant="subtle"
+                    >
+                      + ajouter des champ
+                    </Button>
+                  </Group>
+                )}
+                {fieldsUpdate.length > 0 && (
+                  <Group position="center" mt="md">
+                    <Button
+                      onClick={() => {
+                        for (
+                          let i = -1;
+                          i < dataInfoForInsertion.length + 5;
+                          i++
+                        ) {
+                          formUpdateByField.removeListItem("fieldSearchArr", i);
+                        }
+                        formUpdateByField.removeListItem("fieldSearchArr", 0);
+                      }}
+                      color="violet"
+                      variant="subtle"
+                    >
+                      - réinitialiser
+                    </Button>
+                  </Group>
+                )}
+                {fieldsUpdate.length > 0 && (
+                  <Group
+                    position="center"
+                    style={{ marginBottom: "8px" }}
+                    mt="md"
+                  >
+                    <Button
+                      color="violet"
+                      onClick={() => {
+                        handleUpdateDataInTable(formUpdateByField.values);
+                      }}
+                    >
+                      Mettre à jour
+                    </Button>
+                  </Group>
+                )}
+
                 <form
                   onSubmit={formDeleteById.onSubmit((values) => {
                     handleDeleteDataByIdOrById(values.idData);
