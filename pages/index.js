@@ -37,7 +37,7 @@ export default function Home() {
 
   const [dataInfoForInsertion, setDataInfoForInsertion] = useState([]);
 
-  // FAIRE DELETE ET PUT !!!!
+  // reste delete par id et pu par id
 
   const formCreateDatabase = useForm({
     initialValues: {
