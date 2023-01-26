@@ -847,7 +847,7 @@ export default function Home() {
                 >
                   <Divider color="violet" my="sm"></Divider>
                   <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
-                    Recherche data par ID
+                    Rechercher data par ID
                   </div>
                   <TextInput
                     placeholder="ID"
@@ -878,7 +878,7 @@ export default function Home() {
                 >
                   <Divider color="violet" my="sm"></Divider>
                   <div style={{ fontWeight: "bold" }}>
-                    Recherche data par champs
+                    Rechercher data par champs
                   </div>
                   {fieldsSearch}
                   {fieldsSearch.length === 0 && (
