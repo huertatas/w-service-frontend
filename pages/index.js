@@ -45,6 +45,12 @@ export default function Home() {
     },
   });
 
+  const formDeleteDatabase = useForm({
+    initialValues: {
+      databaseName: "",
+    },
+  });
+
   const formCreateTableau = useForm({
     initialValues: {
       tableauName: "",
@@ -418,6 +424,21 @@ export default function Home() {
     }
   };
 
+  // DELETE DB
+  const handleDeleteDatabase = async (value) => {
+    try {
+      await axios.delete(`http://localhost:8000/${value}`);
+
+      showNotification({
+        message: "Base de donnée supprimée",
+        color: "violet",
+      });
+      await handleGetDatabases();
+    } catch (e) {
+      console.log("error ->", e.message);
+    }
+  };
+
   let items = databases.map((item, index) => {
     return (
       <NavLink
@@ -526,6 +547,28 @@ export default function Home() {
                 <Group position="right" mt="md">
                   <Button color="violet" type="submit">
                     Créer
+                  </Button>
+                </Group>
+              </form>
+            </Box>
+            <Box
+              sx={{ maxWidth: 700 }}
+              style={{ marginTop: "25px", margin: "10px" }}
+              mx="auto"
+            >
+              <form
+                onSubmit={formDeleteDatabase.onSubmit((values) => {
+                  handleDeleteDatabase(values.databaseName);
+                })}
+              >
+                <TextInput
+                  label="Supprimer une base de donnée"
+                  placeholder="Nom"
+                  {...formDeleteDatabase.getInputProps("databaseName")}
+                />
+                <Group position="right" mt="md">
+                  <Button color="violet" type="submit">
+                    Supprimer
                   </Button>
                 </Group>
               </form>
