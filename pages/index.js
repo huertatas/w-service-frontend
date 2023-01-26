@@ -69,6 +69,12 @@ export default function Home() {
     },
   });
 
+  const formDeleteById = useForm({
+    initialValues: {
+      idData: "",
+    },
+  });
+
   const formGetByField = useForm({
     initialValues: {
       fieldSearchArr: [],
@@ -386,6 +392,24 @@ export default function Home() {
       );
 
       setDataGotById(res.data);
+    } catch (e) {
+      console.log("error ->", e.message);
+    }
+  };
+
+  // DELETE DATA BY ID
+  const handleDeleteDataByIdOrById = async (value) => {
+    try {
+      const res = await axios.delete(
+        `http://localhost:8000/${databaseNameSelected}/${tableauSelected}?id=${value}`
+      );
+
+      await handleGetDatabaseFull(`${databaseNameSelected}/${tableauSelected}`);
+
+      showNotification({
+        message: "Suppression de la data réussis",
+        color: "violet",
+      });
     } catch (e) {
       console.log("error ->", e.message);
     }
@@ -790,6 +814,21 @@ export default function Home() {
                   {JSON.stringify(dataFromDatabase, null, 2)}
                 </Code>
                 <form
+                  onSubmit={formDeleteById.onSubmit((values) => {
+                    handleDeleteDataByIdOrById(values.idData);
+                  })}
+                  style={{ marginTop: "15px" }}
+                >
+                  <Divider color="violet" my="sm"></Divider>
+                  <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
+                    Supprimer data par ID
+                  </div>
+                  <TextInput
+                    placeholder="ID"
+                    {...formDeleteById.getInputProps("idData")}
+                  />
+                </form>
+                <form
                   onSubmit={formGetById.onSubmit((values) => {
                     handleGetDataByIdOrById(values.idData);
                   })}
@@ -797,7 +836,7 @@ export default function Home() {
                 >
                   <Divider color="violet" my="sm"></Divider>
                   <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
-                    Recherche par ID
+                    Recherche data par ID
                   </div>
                   <TextInput
                     placeholder="ID"
@@ -827,7 +866,9 @@ export default function Home() {
                   mx="auto"
                 >
                   <Divider color="violet" my="sm"></Divider>
-                  <div style={{ fontWeight: "bold" }}>Recherche par champs</div>
+                  <div style={{ fontWeight: "bold" }}>
+                    Recherche data par champs
+                  </div>
                   {fieldsSearch}
                   {fieldsSearch.length === 0 && (
                     <Group position="center" mt="md">
