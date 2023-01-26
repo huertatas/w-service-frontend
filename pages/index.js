@@ -846,7 +846,18 @@ export default function Home() {
                   borderRadius: "25px",
                 }}
               >
-                <Code style={{ background: "white" }} block mt={5}>
+                <Code
+                  style={{
+                    background: "white",
+                    position: "sticky",
+                    top: "76px",
+                    zIndex: "1000",
+                    border: "2px solid #7950f2",
+                    borderRadius: "12px",
+                  }}
+                  block
+                  mt={5}
+                >
                   {JSON.stringify(dataFromDatabase, null, 2)}
                 </Code>
                 <Divider color="violet" my="sm"></Divider>
