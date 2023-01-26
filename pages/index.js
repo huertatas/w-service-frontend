@@ -221,6 +221,7 @@ export default function Home() {
       });
       setDatabases(data);
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -298,6 +299,7 @@ export default function Home() {
 
       setDatabaseSelected(tablesDatabase);
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -311,6 +313,7 @@ export default function Home() {
         setDataFromDatabases(res.data);
       }
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -330,6 +333,7 @@ export default function Home() {
       });
       await handleGetDatabases();
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -361,6 +365,7 @@ export default function Home() {
       });
       await handleGetDataFromDatabases(databaseNameSelected);
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -380,6 +385,7 @@ export default function Home() {
       });
       await handleGetDataFromDatabases(databaseNameSelected);
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -393,6 +399,7 @@ export default function Home() {
 
       setDataGotById(res.data);
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -400,7 +407,7 @@ export default function Home() {
   // DELETE DATA BY ID
   const handleDeleteDataByIdOrById = async (value) => {
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `http://localhost:8000/${databaseNameSelected}/${tableauSelected}?id=${value}`
       );
 
@@ -411,7 +418,8 @@ export default function Home() {
         color: "violet",
       });
     } catch (e) {
-      console.log("error ->", e.message);
+      showNotification({ message: e.response.data, color: "red" });
+      console.log("error ->", e.response.data);
     }
   };
 
@@ -434,6 +442,7 @@ export default function Home() {
     setDataGotByField(res.data);
     try {
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -467,7 +476,7 @@ export default function Home() {
       }
     } catch (e) {
       console.log("error ->", e.message);
-      showNotification({ message: "Mauvais type de donnée", color: "red" });
+      showNotification({ message: e.response.data, color: "red" });
     }
   };
 
@@ -482,6 +491,7 @@ export default function Home() {
       });
       await handleGetDatabases();
     } catch (e) {
+      showNotification({ message: e.response.data, color: "red" });
       console.log("error ->", e.message);
     }
   };
@@ -748,6 +758,10 @@ export default function Home() {
                   borderRadius: "25px",
                 }}
               >
+                <Code style={{ background: "white" }} block mt={5}>
+                  {JSON.stringify(dataFromDatabase, null, 2)}
+                </Code>
+                <Divider color="violet" my="sm"></Divider>
                 <div style={{ fontWeight: "bold" }}>Insérer des données</div>
                 {fieldsCreate}
                 {fieldsCreate.length === 0 && (
@@ -810,9 +824,6 @@ export default function Home() {
                     </Button>
                   </Group>
                 )}
-                <Code style={{ background: "white" }} block mt={5}>
-                  {JSON.stringify(dataFromDatabase, null, 2)}
-                </Code>
                 <form
                   onSubmit={formDeleteById.onSubmit((values) => {
                     handleDeleteDataByIdOrById(values.idData);
