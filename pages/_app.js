@@ -5,7 +5,7 @@ import { NotificationsProvider } from "@mantine/notifications";
 function MyApp({ Component, pageProps }) {
   return (
     <MantineProvider theme={{ fontFamily: "Aeonik" }}>
-      <NotificationsProvider>
+      <NotificationsProvider position="top-right" zIndex={2077}>
         <Component {...pageProps} />
       </NotificationsProvider>
     </MantineProvider>

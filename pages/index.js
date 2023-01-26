@@ -13,6 +13,7 @@ import {
   Select,
   Checkbox,
   Divider,
+  ScrollArea,
 } from "@mantine/core";
 import { IconDatabase, IconChevronRight, IconCircleOff } from "@tabler/icons";
 import { TextInput, Button, Group, Box } from "@mantine/core";
@@ -846,7 +847,7 @@ export default function Home() {
                   borderRadius: "25px",
                 }}
               >
-                <Code
+                <ScrollArea
                   style={{
                     background: "white",
                     position: "sticky",
@@ -854,12 +855,14 @@ export default function Home() {
                     zIndex: "1000",
                     border: "2px solid #7950f2",
                     borderRadius: "12px",
+                    height: 200,
                   }}
-                  block
-                  mt={5}
                 >
-                  {JSON.stringify(dataFromDatabase, null, 2)}
-                </Code>
+                  <Code block mt={5}>
+                    {JSON.stringify(dataFromDatabase, null, 2)}
+                  </Code>
+                </ScrollArea>
+
                 <Divider color="violet" my="sm"></Divider>
                 <div style={{ fontWeight: "bold" }}>Insérer des données</div>
                 {fieldsCreate}
